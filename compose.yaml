@@ -3,32 +3,39 @@ services:
     build:
       context: .
       args:
-        - BROKER_HOSTNAME=broker
-    ports:
-      - 1234:1234
+        - BROKER_HOSTNAME=localhost
+#    ports:
+#      - 1234:1234
     depends_on:
       - broker
-    networks:
-      - mosquitto
+#    networks:
+#      - mosquitto
+#      - host
     volumes:
       - ./db/:/var/lib/pyde1
+      - ./log/:/var/log/pyde1
     # for bluetooth pass-through
-    privileged: true
+    #privileged: true
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
 
   broker:
     image: eclipse-mosquitto:2.0.15
-    ports:
-      - 1883:1883
-    networks:
-      - mosquitto
+#    ports:
+#      - 1883:1883
+#    networks:
+#      - mosquitto
+    network_mode: host
     command: ["mosquitto", "-c", "/mosquitto-no-auth.conf"]
 
-  test:
-    build:
-      dockerfile: test.Dockerfile
-      context: ./
+#  test:
+#    build:
+#      dockerfile: test.Dockerfile
+#      context: ./
 
 networks:
     mosquitto:
         name: mosquitto
         driver: bridge
+

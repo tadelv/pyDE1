@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   sqlite3 \
   bluez \
   bluetooth \
-  dbus
+  dbus \
+  sudo
 
 SHELL ["/bin/bash", "-c"]
 
@@ -17,6 +18,8 @@ ADD pyproject.toml .
 ADD setup.cfg .
 ADD entrypoint.sh .
 
+COPY ./bluezuser.conf /etc/dbus-1/system.d/
+
 ENV PYDE1_USER=pyde1
 ENV PYDE1_GROUP="${PYDE1_USER}"
 ENV PYDE1_ROOT=/pyde1/src/pyDE1
@@ -26,7 +29,11 @@ ARG BROKER_HOSTNAME=::1
 # bypass the config file and use our own env vars defined above
 RUN cat /dev/null > ./install/_config
 
-RUN bash ./install/10-create-user.sh
+#RUN bash ./install/10-create-user.sh
+RUN useradd -m $PYDE1_USER \
+  && adduser $PYDE1_USER sudo \
+  && passwd -d $PYDE1_USER 
+
 RUN chsh -s $(which bash) $PYDE1_USER
 
 RUN bash ./install/20-create-dirs.sh
@@ -37,5 +44,7 @@ RUN pip install setuptools .
 
 RUN bash ./install/40-config-files.sh
 RUN sed -i "s/\(\s\+BROKER_HOSTNAME: \).*/\1$BROKER_HOSTNAME/" /usr/local/etc/pyde1/pyde1.conf
+
+USER pyde1
 
 CMD ["./entrypoint.sh"]
