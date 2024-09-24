@@ -1595,6 +1595,15 @@ class DE1 (Singleton, ManagedBleakDevice):
 
         await self.upload_json_v2_profile(source)
 
+    async def get_profiles(self):
+        async with aiosqlite.connect(config.database.FILENAME) as db:
+            cur: aiosqlite.Cursor = await db.execute(
+            'SELECT id, title FROM profile '
+            'ORDER BY title'
+            )
+            rows = await cur.fetchall()
+        return rows
+
 
     async def _sleep_if_bored(self):
         # TODO: Though an async task can be killed, be polite on shutdown
